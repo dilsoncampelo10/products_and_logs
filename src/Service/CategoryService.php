@@ -3,6 +3,7 @@
 namespace Contatoseguro\TesteBackend\Service;
 
 use Contatoseguro\TesteBackend\Config\DB;
+use PDO;
 
 class CategoryService
 {
@@ -27,34 +28,39 @@ class CategoryService
         return $stm;
     }
 
-    public function getOne($adminUserId, $categoryId)
+    public function getOne(int $adminUserId, int $categoryId)
     {
         $query = "
             SELECT *
             FROM category c
             WHERE c.active = 1
-            AND c.company_id = {$this->getCompanyFromAdminUser($adminUserId)}
-            AND c.id = {$categoryId}
+            AND c.company_id = :adminUserId
+            OR c.company_id IS NULL
+            AND c.id = :categoryId
         ";
 
         $stm = $this->pdo->prepare($query);
+
+        $stm->bindValue(':adminUserId', $this->getCompanyFromAdminUser($adminUserId), PDO::PARAM_INT);
+        $stm->bindValue(':categoryId', $categoryId, PDO::PARAM_INT);
 
         $stm->execute();
 
         return $stm;
     }
 
-    public function getProductCategory($productId)
+    public function getProductCategory(int $productId)
     {
         $query = "
             SELECT c.id
             FROM category c
             INNER JOIN product_category pc
                 ON pc.cat_id = c.id
-            WHERE pc.product_id = {$productId}
+            WHERE pc.product_id = :productId
         ";
 
         $stm = $this->pdo->prepare($query);
+        $stm->bindValue(':productId', $productId, PDO::PARAM_INT);
 
         $stm->execute();
 
@@ -105,16 +111,17 @@ class CategoryService
         return $stm->execute();
     }
 
-    private function getCompanyFromAdminUser($adminUserId)
+    private function getCompanyFromAdminUser(int $adminUserId)
     {
         $query = "
             SELECT company_id
             FROM admin_user
-            WHERE id = {$adminUserId}
+            WHERE id = :adminUserId
         ";
 
         $stm = $this->pdo->prepare($query);
-        
+        $stm->bindValue(':adminUserId', $adminUserId, PDO::PARAM_INT);
+
         $stm->execute();
 
         return $stm->fetch()->company_id;

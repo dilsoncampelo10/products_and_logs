@@ -13,7 +13,7 @@ class ProductService
         $this->pdo = DB::connect();
     }
 
-    public function getAll($adminUserId)
+    public function getAll(int $adminUserId)
     {
         $query = "
             SELECT p.*, c.title as category
@@ -31,13 +31,15 @@ class ProductService
         return $stm;
     }
 
-    public function getOne($id)
+    public function getOne(int $id)
     {
         $stm = $this->pdo->prepare("
             SELECT *
             FROM product
-            WHERE id = {$id}
+            WHERE id = :id
         ");
+
+        $stm->bindValue(':id', $id, PDO::PARAM_INT);
         $stm->execute();
 
         return $stm;
