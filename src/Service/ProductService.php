@@ -3,6 +3,7 @@
 namespace Contatoseguro\TesteBackend\Service;
 
 use Contatoseguro\TesteBackend\Config\DB;
+use PDO;
 
 class ProductService
 {
@@ -18,11 +19,12 @@ class ProductService
             SELECT p.*, c.title as category
             FROM product p
             INNER JOIN product_category pc ON pc.product_id = p.id
-            INNER JOIN category c ON c.id = pc.id
-            WHERE p.company_id = {$adminUserId}
+            INNER JOIN category c ON c.id = pc.cat_id
+            WHERE p.company_id = :adminUserId
         ";
 
         $stm = $this->pdo->prepare($query);
+        $stm->bindValue(':adminUserId', $adminUserId, PDO::PARAM_INT);
 
         $stm->execute();
 
@@ -131,7 +133,7 @@ class ProductService
         ");
         if (!$stm->execute())
             return false;
-        
+
         $stm = $this->pdo->prepare("DELETE FROM product WHERE id = {$id}");
         if (!$stm->execute())
             return false;
