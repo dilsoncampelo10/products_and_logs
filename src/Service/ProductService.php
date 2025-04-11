@@ -14,7 +14,7 @@ class ProductService
         $this->pdo = DB::connect();
     }
 
-    public function getAll(int $adminUserId, array $queryParams )
+    public function getAll(int $adminUserId, array $queryParams)
     {
         $filters = $this->extractFilters($queryParams);
         $query = $this->buildQuery($filters);
@@ -150,19 +150,23 @@ class ProductService
         return $stm->execute();
     }
 
-    public function getLog($id)
+    public function getLog(int $id)
     {
         $stm = $this->pdo->prepare("
-            SELECT *
-            FROM product_log
-            WHERE product_id = {$id}
+            SELECT pl.*, au.name
+            FROM product_log AS pl
+            INNER JOIN admin_user AS au ON au.id = pl.admin_user_id
+            WHERE pl.product_id = :id
         ");
+
+
+        $stm->bindValue(':id', $id, PDO::PARAM_INT);
         $stm->execute();
 
         return $stm;
     }
 
-    private function extractFilters(array $queryParams ): array
+    private function extractFilters(array $queryParams): array
     {
         $allowedOrderBy = ['created_at', 'title', 'price'];
         $allowedOrder = ['ASC', 'DESC'];

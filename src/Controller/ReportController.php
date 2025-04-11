@@ -50,7 +50,19 @@ class ReportController
             $data[$i + 1][] = $product->price;
             $data[$i + 1][] = $product->category;
             $data[$i + 1][] = $product->created_at;
-            $data[$i + 1][] = $productLogs;
+            $actionMap = [
+                'create' => 'Criação',
+                'update' => 'Atualização',
+                'delete' => 'Remoção',
+            ];
+
+            $logsText = [];
+            foreach ($productLogs as $log) {
+                $action = $actionMap[$log->action] ?? $log->action;
+                $logsText[] = "({$log->name}, {$action}, {$log->timestamp})";
+            }
+
+            $data[$i + 1][] = implode(', ', $logsText);
         }
 
         $report = "<table style='font-size: 10px;'>";

@@ -3,6 +3,7 @@
 namespace Contatoseguro\TesteBackend\Service;
 
 use Contatoseguro\TesteBackend\Config\DB;
+use PDO;
 
 class CompanyService
 {
@@ -12,11 +13,12 @@ class CompanyService
         $this->pdo = DB::connect();
     }
 
-    public function getNameById($id)
+    public function getNameById(int $id)
     {
-        $stm = $this->pdo->prepare("SELECT name FROM company WHERE id = {$id}");
+        $stm = $this->pdo->prepare("SELECT name FROM company WHERE id = :id");
+        $stm->bindValue(':id', $id, PDO::PARAM_INT);
         $stm->execute();
-        
+
         return $stm;
     }
 }
