@@ -13,8 +13,10 @@ class ProductService
         $this->pdo = DB::connect();
     }
 
-    public function getAll(int $adminUserId)
+    public function getAll(int $adminUserId, array $queryParams)
     {
+        $active = isset($queryParams['active']) ? $queryParams['active'] : null;
+
         $query = "
             SELECT p.*, c.title as category
             FROM product p
@@ -23,13 +25,21 @@ class ProductService
             WHERE p.company_id = :adminUserId
         ";
 
+        if (!is_null($active)) {
+            $query .= " AND p.active = :active";
+        }
+
         $stm = $this->pdo->prepare($query);
         $stm->bindValue(':adminUserId', $adminUserId, PDO::PARAM_INT);
 
-        $stm->execute();
+        if (!is_null($active)) {
+            $stm->bindValue(':active', $active, PDO::PARAM_INT);
+        }
 
+        $stm->execute();
         return $stm;
     }
+
 
     public function getOne(int $id)
     {
