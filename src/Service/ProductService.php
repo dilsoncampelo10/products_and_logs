@@ -49,12 +49,16 @@ class ProductService
                 price,
                 active
             ) VALUES (
-                {$body['company_id']},
-                '{$body['title']}',
-                {$body['price']},
-                {$body['active']}
+                :company_id,
+                :title,
+                :price,
+                :active
             )
         ");
+        $stm->bindValue(':company_id', $body['company_id'], PDO::PARAM_INT);
+        $stm->bindValue(':title', $body['title'], PDO::PARAM_STR);
+        $stm->bindValue(':price', $body['price'], PDO::PARAM_INPUT_OUTPUT);
+        $stm->bindValue(':active', $body['active'], PDO::PARAM_INT);
         if (!$stm->execute())
             return false;
 
@@ -65,10 +69,14 @@ class ProductService
                 product_id,
                 cat_id
             ) VALUES (
-                {$productId},
-                {$body['category_id']}
+               :product_id,
+               :category_id
             );
         ");
+
+        $stm->bindValue(':product_id', $productId, PDO::PARAM_INT);
+        $stm->bindValue(':category_id', $body['category_id'], PDO::PARAM_INT);
+
         if (!$stm->execute())
             return false;
 
@@ -76,13 +84,21 @@ class ProductService
             INSERT INTO product_log (
                 product_id,
                 admin_user_id,
-                `action`
+                `action`,
+                `field`
+             
             ) VALUES (
-                {$productId},
-                {$adminUserId},
-                'create'
+                :product_id,
+                :admin_user_id,
+                :action,
+                :field
             )
         ");
+        $stm->bindValue(':product_id', $productId, PDO::PARAM_INT);
+        $stm->bindValue(':admin_user_id', $adminUserId, PDO::PARAM_INT);
+        $stm->bindValue(':action', 'create', PDO::PARAM_STR);
+        $stm->bindValue(':field', 'all', PDO::PARAM_STR);
+
 
         return $stm->execute();
     }

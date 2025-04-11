@@ -3,6 +3,7 @@
 use Contatoseguro\TesteBackend\Controller\CategoryController;
 use Contatoseguro\TesteBackend\Controller\CompanyController;
 use Contatoseguro\TesteBackend\Controller\HomeController;
+use Contatoseguro\TesteBackend\Controller\LogController;
 use Contatoseguro\TesteBackend\Controller\ProductController;
 use Contatoseguro\TesteBackend\Controller\ReportController;
 use Slim\App;
@@ -33,3 +34,4 @@ $app->group('/categories', function (RouteCollectorProxy $group) {
 });
 
 $app->get('/report', [ReportController::class, 'generate']);
+$app->get('/logs/products', LogController::class . ':getProductLog');
