@@ -4,6 +4,7 @@ namespace Contatoseguro\TesteBackend\Service;
 
 use Contatoseguro\TesteBackend\Config\DB;
 use PDO;
+use PDOStatement;
 
 class ProductService
 {
@@ -15,38 +16,15 @@ class ProductService
 
     public function getAll(int $adminUserId, array $queryParams)
     {
-        $active = isset($queryParams['active']) ? $queryParams['active'] : null;
-        $category = isset($queryParams['category']) ? $queryParams['category'] : null;
-
-        $query = "
-            SELECT p.*, c.title as category
-            FROM product p
-            INNER JOIN product_category pc ON pc.product_id = p.id
-            INNER JOIN category c ON c.id = pc.cat_id
-            WHERE p.company_id = :adminUserId
-        ";
-
-        if (!is_null($active)) {
-            $query .= " AND p.active = :active";
-        }
-        if (!is_null($category)) {
-            $query .= " AND c.id = :category";
-        }
+        $filters = $this->extractFilters($queryParams);
+        $query = $this->buildQuery($filters);
 
         $stm = $this->pdo->prepare($query);
-        $stm->bindValue(':adminUserId', $adminUserId, PDO::PARAM_INT);
-
-        if (!is_null($active)) {
-            $stm->bindValue(':active', $active, PDO::PARAM_INT);
-        }
-        if (!is_null($category)) {
-            $stm->bindValue(':category', $category , PDO::PARAM_INT);
-        }
+        $this->bindParams($stm, $adminUserId, $filters);
 
         $stm->execute();
         return $stm;
     }
-
 
     public function getOne(int $id)
     {
@@ -182,5 +160,61 @@ class ProductService
         $stm->execute();
 
         return $stm;
+    }
+
+    private function extractFilters(array $queryParams): array
+    {
+        $allowedOrderBy = ['created_at', 'title', 'price'];
+        $allowedOrder = ['ASC', 'DESC'];
+
+        $orderBy = in_array($queryParams['order_by'] ?? '', $allowedOrderBy)
+            ? $queryParams['order_by']
+            : 'created_at';
+
+        $order = strtoupper($queryParams['order'] ?? 'DESC');
+        $order = in_array($order, $allowedOrder) ? $order : 'DESC';
+
+        return [
+            'active' => $queryParams['active'] ?? null,
+            'category' => $queryParams['category'] ?? null,
+            'orderBy' => $orderBy,
+            'order' => $order,
+        ];
+    }
+
+    private function buildQuery(array $filters): string
+    {
+        $query = "
+        SELECT p.*, c.title as category
+        FROM product p
+        INNER JOIN product_category pc ON pc.product_id = p.id
+        INNER JOIN category c ON c.id = pc.cat_id
+        WHERE p.company_id = :adminUserId
+    ";
+
+        if (!is_null($filters['active'])) {
+            $query .= " AND p.active = :active";
+        }
+
+        if (!is_null($filters['category'])) {
+            $query .= " AND c.id = :category";
+        }
+
+        $query .= " ORDER BY p.{$filters['orderBy']} {$filters['order']}";
+
+        return $query;
+    }
+
+    private function bindParams(PDOStatement $stm, int $adminUserId, array $filters): void
+    {
+        $stm->bindValue(':adminUserId', $adminUserId, PDO::PARAM_INT);
+
+        if (!is_null($filters['active'])) {
+            $stm->bindValue(':active', $filters['active'], PDO::PARAM_INT);
+        }
+
+        if (!is_null($filters['category'])) {
+            $stm->bindValue(':category', $filters['category'], PDO::PARAM_INT);
+        }
     }
 }
