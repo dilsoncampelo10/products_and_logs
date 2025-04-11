@@ -14,7 +14,7 @@ class ProductService
         $this->pdo = DB::connect();
     }
 
-    public function getAll(int $adminUserId, array $queryParams)
+    public function getAll(int $adminUserId, array $queryParams )
     {
         $filters = $this->extractFilters($queryParams);
         $query = $this->buildQuery($filters);
@@ -162,7 +162,7 @@ class ProductService
         return $stm;
     }
 
-    private function extractFilters(array $queryParams): array
+    private function extractFilters(array $queryParams ): array
     {
         $allowedOrderBy = ['created_at', 'title', 'price'];
         $allowedOrder = ['ASC', 'DESC'];
