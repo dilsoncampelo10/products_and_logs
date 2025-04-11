@@ -16,6 +16,7 @@ class ProductService
     public function getAll(int $adminUserId, array $queryParams)
     {
         $active = isset($queryParams['active']) ? $queryParams['active'] : null;
+        $category = isset($queryParams['category']) ? $queryParams['category'] : null;
 
         $query = "
             SELECT p.*, c.title as category
@@ -28,12 +29,18 @@ class ProductService
         if (!is_null($active)) {
             $query .= " AND p.active = :active";
         }
+        if (!is_null($category)) {
+            $query .= " AND c.id = :category";
+        }
 
         $stm = $this->pdo->prepare($query);
         $stm->bindValue(':adminUserId', $adminUserId, PDO::PARAM_INT);
 
         if (!is_null($active)) {
             $stm->bindValue(':active', $active, PDO::PARAM_INT);
+        }
+        if (!is_null($category)) {
+            $stm->bindValue(':category', $category , PDO::PARAM_INT);
         }
 
         $stm->execute();
