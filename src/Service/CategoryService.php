@@ -31,7 +31,7 @@ class CategoryService
     public function getOne(int $adminUserId, int $categoryId)
     {
         $query = "
-            SELECT *
+            SELECT c.title
             FROM category c
             WHERE c.active = 1
             AND c.company_id = :adminUserId
@@ -49,23 +49,24 @@ class CategoryService
         return $stm;
     }
 
-    public function getProductCategory(int $productId)
+    public function getProductCategory(int $productId, int $adminUserId)
     {
         $query = "
-            SELECT c.id
+            SELECT c.id, c.title
             FROM category c
-            INNER JOIN product_category pc
-                ON pc.cat_id = c.id
+            INNER JOIN product_category pc ON pc.cat_id = c.id
             WHERE pc.product_id = :productId
+            AND (c.company_id = :adminUserId OR c.company_id IS NULL)
         ";
 
         $stm = $this->pdo->prepare($query);
         $stm->bindValue(':productId', $productId, PDO::PARAM_INT);
-
+        $stm->bindValue(':adminUserId', $adminUserId, PDO::PARAM_INT);
         $stm->execute();
 
         return $stm;
     }
+
 
     public function insertOne($body, $adminUserId)
     {

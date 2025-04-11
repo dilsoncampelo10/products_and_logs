@@ -24,7 +24,7 @@ class ProductController
         $adminUserId = $request->getHeader('admin_user_id')[0];
         $queryParams = $request->getQueryParams();
 
-        $stm = $this->service->getAll($adminUserId,$queryParams);
+        $stm = $this->service->getAll($adminUserId, $queryParams);
         $response->getBody()->write(json_encode($stm->fetchAll()));
         return $response->withStatus(200);
     }
@@ -34,14 +34,16 @@ class ProductController
         $stm = $this->service->getOne($args['id']);
         $product = Product::hydrateByFetch($stm->fetch());
 
-        $adminUserId = $request->getHeader('admin_user_id')[0];
-        $productCategory = $this->categoryService->getProductCategory($product->id)->fetch();
-        $fetchedCategory = $this->categoryService->getOne($adminUserId, $productCategory->id)->fetch();
-        $product->setCategory($fetchedCategory->title);
+        $adminUserId = (int) $request->getHeader('admin_user_id')[0];
+
+        $productCategories = $this->categoryService->getProductCategory($product->id, $adminUserId)->fetchAll();
+
+        $product->setCategory($productCategories);
 
         $response->getBody()->write(json_encode($product));
         return $response->withStatus(200);
     }
+
 
     public function insertOne(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
     {
