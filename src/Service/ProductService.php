@@ -57,7 +57,7 @@ class ProductService
         ");
         $stm->bindValue(':company_id', $body['company_id'], PDO::PARAM_INT);
         $stm->bindValue(':title', $body['title'], PDO::PARAM_STR);
-        $stm->bindValue(':price', $body['price'], PDO::PARAM_INPUT_OUTPUT);
+        $stm->bindValue(':price', $body['price']);
         $stm->bindValue(':active', $body['active'], PDO::PARAM_INT);
         if (!$stm->execute())
             return false;
@@ -105,39 +105,96 @@ class ProductService
 
     public function updateOne($id, $body, $adminUserId)
     {
+        $oldProduct = $this->pdo->prepare("
+            SELECT p.*, pc.cat_id as category_id
+            FROM product p
+            LEFT JOIN product_category pc ON pc.product_id = p.id
+            WHERE p.id = :id
+        ");
+
+        $oldProduct->bindValue(':id', $id, PDO::PARAM_INT);
+        $oldProduct->execute();
+        $oldData = $oldProduct->fetch(PDO::FETCH_ASSOC);
+
+        if (!$oldData) {
+            return false;
+        }
+
         $stm = $this->pdo->prepare("
             UPDATE product
-            SET company_id = {$body['company_id']},
-                title = '{$body['title']}',
-                price = {$body['price']},
-                active = {$body['active']}
-            WHERE id = {$id}
+            SET company_id = :company_id,
+                title = :title,
+                price = :price,
+                active = :active
+            WHERE id = :id
         ");
+
+        $stm->bindValue(':company_id', $body['company_id'], PDO::PARAM_STR);
+        $stm->bindValue(':title', $body['title'], PDO::PARAM_STR);
+        $stm->bindValue(':price', $body['price']);
+        $stm->bindValue(':active', $body['active'], PDO::PARAM_BOOL);
+        $stm->bindValue(':id', $id, PDO::PARAM_INT);
+
         if (!$stm->execute())
             return false;
 
         $stm = $this->pdo->prepare("
             UPDATE product_category
-            SET cat_id = {$body['category_id']}
-            WHERE product_id = {$id}
+            SET cat_id = :cat_id
+            WHERE product_id = :product_id
         ");
+        $stm->bindValue(':cat_id', $body['category_id'], PDO::PARAM_INT);
+        $stm->bindValue(':product_id', $id, PDO::PARAM_INT);
         if (!$stm->execute())
             return false;
 
-        $stm = $this->pdo->prepare("
+        $logStmt = $this->pdo->prepare("
             INSERT INTO product_log (
                 product_id,
                 admin_user_id,
-                `action`
+                `action`,
+                `field`,
+                old_value,
+                new_value
             ) VALUES (
-                {$id},
-                {$adminUserId},
-                'update'
+                :product_id,
+                :admin_user_id,
+                'update',
+                :field,
+                :old_value,
+                :new_value
             )
         ");
 
-        return $stm->execute();
+        $fieldLogs = ['company_id', 'title', 'price', 'active', 'category_id'];
+        foreach ($fieldLogs as $fieldLog) {
+            $old = $oldData[$fieldLog] ?? null;
+            $new = $body[$fieldLog] ?? null;
+
+            $isDifferent = false;
+
+            if ($fieldLog === 'active') {
+                $isDifferent = ((int)$old !== (int)$new);
+            } elseif (is_numeric($old) && is_numeric($new)) {
+                $isDifferent = ((float)$old !== (float)$new);
+            } else {
+                $isDifferent = ($old !== $new);
+            }
+
+            if ($isDifferent) {
+                $logStmt->bindValue(':product_id', $id, PDO::PARAM_INT);
+                $logStmt->bindValue(':admin_user_id', $adminUserId, PDO::PARAM_INT);
+                $logStmt->bindValue(':field', $fieldLog, PDO::PARAM_STR);
+                $logStmt->bindValue(':old_value', (string)$old, PDO::PARAM_STR);
+                $logStmt->bindValue(':new_value', (string)$new, PDO::PARAM_STR);
+                $logStmt->execute();
+            }
+        }
+
+
+        return true;
     }
+
 
     public function deleteOne($id, $adminUserId)
     {
