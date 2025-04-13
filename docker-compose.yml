@@ -1,0 +1,12 @@
+version: "3.8"
+
+services:
+  app:
+    build: .
+    container_name: api_products
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/var/www/html
+    environment:
+      - APP_ENV=local
