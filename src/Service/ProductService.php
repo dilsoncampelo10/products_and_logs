@@ -196,32 +196,42 @@ class ProductService
     }
 
 
-    public function deleteOne($id, $adminUserId)
+    public function deleteOne(int $id, int $adminUserId)
     {
-        $stm = $this->pdo->prepare("
-            DELETE FROM product_category WHERE product_id = {$id}
-        ");
-        if (!$stm->execute())
-            return false;
-
-        $stm = $this->pdo->prepare("DELETE FROM product WHERE id = {$id}");
-        if (!$stm->execute())
-            return false;
-
         $stm = $this->pdo->prepare("
             INSERT INTO product_log (
                 product_id,
                 admin_user_id,
-                `action`
+                `action`,
+                `field`,
+                old_value,
+                new_value
             ) VALUES (
-                {$id},
-                {$adminUserId},
-                'delete'
+                :product_id,
+                :admin_user_id,
+                'delete',
+                'all',
+                '',
+                ''
             )
         ");
+        $stm->bindValue(':product_id', $id, PDO::PARAM_INT);
+        $stm->bindValue(':admin_user_id', $adminUserId, PDO::PARAM_INT);
 
+        if (!$stm->execute())
+            return false;
+
+        $stm = $this->pdo->prepare("DELETE FROM product_category WHERE product_id = :id");
+        $stm->bindValue(':id', $id, PDO::PARAM_INT);
+        if (!$stm->execute())
+            return false;
+
+
+        $stm = $this->pdo->prepare("DELETE FROM product WHERE id = :id");
+        $stm->bindValue(':id', $id, PDO::PARAM_INT);
         return $stm->execute();
     }
+
 
     public function getLog(int $id)
     {
