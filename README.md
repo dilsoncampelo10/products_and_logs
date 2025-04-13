@@ -68,7 +68,7 @@ Para a listagem de produtos:
 - [✔️] Gostaria de saber qual usuário mudou o preço do produto `iphone 8` por último.
 
 ### Extra
-- [ ] Aqui fica um desafio extra **opcional**: _criar um ambiente com_ Docker _para a api_.
+- [✔️] Aqui fica um desafio extra **opcional**: _criar um ambiente com_ Docker _para a api_.
 
 **Seu trabalho é atender às 7 demandas solicitadas pelo cliente.**
 
