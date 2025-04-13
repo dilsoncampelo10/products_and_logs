@@ -19,6 +19,7 @@ class LogController
     {
         $queryParams = $request->getQueryParams();
         $title = $queryParams['title'] ?? null;
+        $field = $queryParams['field'] ?? 'price';
 
         if (!$title) {
             $response->getBody()->write(json_encode(['message' => 'O parâmetro "title" é obrigatório']));
@@ -27,7 +28,7 @@ class LogController
                 ->withHeader('Content-Type', 'application/json');
         }
 
-        $log = $this->service->getLastPriceUpdateUserByTitle($title);
+        $log = $this->service->getLastFieldUpdateUserByTitle($title, $field);
 
         if (!$log) {
             $response->getBody()->write(json_encode(['message' => 'Log não encontrado para o produto informado']));
