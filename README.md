@@ -79,4 +79,31 @@ Sinta-se a vontade para refatorar o que achar pertinente, considerando questões
 Boa sorte! :)
 
 ## Suas Respostas, Duvidas e Observações
-[Adicione  aqui suas respostas, dúvidas e observações]
+
+### Nova rota criada:
+
+Para atender bem a demanda de Logs, a estrutura da tabela de product_logs foi mudada, sendo adicionada o campo:
+
+- field
+- old_value
+- new_value
+
+Para que fosse possível consultar quem alterou determinada coluna por último e qual o antigo e novo valor.
+
+Então, a seguinte rota foi criada:
+
+(GET) /logs/products
+
+enviando como query params:
+
+- title : string (Para buscar um produto pelo titulo)
+- field : string (Nome do campo que deseja buscar, caso não seja enviada busca o log do price)
+
+
+### Docker
+
+A aplicação também foi "Dockerizada", para atuar utilizando containers. Para subir a aplicação basta rodar o camando:
+
+```bash
+
+docker-compose up --build
