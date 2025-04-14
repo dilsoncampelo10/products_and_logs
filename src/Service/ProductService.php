@@ -40,7 +40,7 @@ class ProductService
         return $stm;
     }
 
-    public function insertOne($body, $adminUserId)
+    public function insertOne(array $body, int $adminUserId)
     {
         $stm = $this->pdo->prepare("
             INSERT INTO product (

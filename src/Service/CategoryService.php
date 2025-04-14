@@ -13,15 +13,16 @@ class CategoryService
         $this->pdo = DB::connect();
     }
 
-    public function getAll($adminUserId)
+    public function getAll(int $adminUserId)
     {
         $query = "
             SELECT *
             FROM category c
-            WHERE c.company_id = {$this->getCompanyFromAdminUser($adminUserId)}
+            WHERE c.company_id = :adminUserId
         ";
 
         $stm = $this->pdo->prepare($query);
+        $stm->bindValue(':adminUserId', $this->getCompanyFromAdminUser($adminUserId), PDO::PARAM_INT);
 
         $stm->execute();
 
@@ -68,7 +69,7 @@ class CategoryService
     }
 
 
-    public function insertOne($body, $adminUserId)
+    public function insertOne(array $body, int $adminUserId)
     {
         $stm = $this->pdo->prepare("
             INSERT INTO category (
@@ -76,38 +77,51 @@ class CategoryService
                 title,
                 active
             ) VALUES (
-                {$this->getCompanyFromAdminUser($adminUserId)},
-                '{$body['title']}',
-                {$body['active']}
+                :adminUserId,
+                :title,
+                :active
             )
         ");
+
+        $stm->bindValue(':title', $body['title'], PDO::PARAM_STR);
+        $stm->bindValue(':active', $body['active'], PDO::PARAM_INT);
+        $stm->bindValue(':adminUserId', $this->getCompanyFromAdminUser($adminUserId), PDO::PARAM_INT);
+
 
         return $stm->execute();
     }
 
-    public function updateOne($id, $body, $adminUserId)
+    public function updateOne(int $id, array $body, int $adminUserId)
     {
         $active = (int)$body['active'];
 
         $stm = $this->pdo->prepare("
             UPDATE category
-            SET title = '{$body['title']}',
-                active = {$active}
-            WHERE id = {$id}
-            AND company_id = {$this->getCompanyFromAdminUser($adminUserId)}
+            SET title = :title,
+                active = :active
+            WHERE id = :id
+            AND company_id = :adminUserId
         ");
+
+        $stm->bindValue(':title', $body['title'], PDO::PARAM_STR);
+        $stm->bindValue(':active', $active, PDO::PARAM_INT);
+        $stm->bindValue(':id', $id, PDO::PARAM_INT);
+        $stm->bindValue(':adminUserId', $this->getCompanyFromAdminUser($adminUserId), PDO::PARAM_INT);
 
         return $stm->execute();
     }
 
-    public function deleteOne($id, $adminUserId)
+    public function deleteOne(int $id, int $adminUserId)
     {
         $stm = $this->pdo->prepare("
             DELETE
             FROM category
-            WHERE id = {$id}
-            AND company_id = {$this->getCompanyFromAdminUser($adminUserId)}
+            WHERE id = :id
+            AND company_id = :adminUserId
         ");
+
+        $stm->bindValue(':id', $id, PDO::PARAM_INT);
+        $stm->bindValue(':adminUserId', $this->getCompanyFromAdminUser($adminUserId), PDO::PARAM_INT);
 
         return $stm->execute();
     }
